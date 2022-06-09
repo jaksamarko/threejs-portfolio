@@ -1,6 +1,7 @@
 import express from 'express'
 import path from 'path'
 import http from 'http'
+import compression from 'compression'
 
 const port: number = 3000
 
@@ -11,6 +12,7 @@ class App {
     constructor(port: number) {
         this.port = port
         const app = express()
+        app.use(compression())
         app.use(express.static(path.join(__dirname, '../client')))
         // In the webpack version of the boilerplate, it is not necessary
         // to add static references to the libs in node_modules if

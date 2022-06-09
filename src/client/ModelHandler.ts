@@ -1,7 +1,10 @@
 import { Group } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import changeMaterial from './HelperFunctions';
+import { ObjectParams } from './SceneHandler';
 
 export type loadEvent = (v:Group)=>void
+export type loadObject = {type: string, params:ObjectParams, ev?:loadEvent}
 
 export class ModelHandler {
     private static inst: ModelHandler;
@@ -28,10 +31,8 @@ export class ModelHandler {
         }
         this.loader.load(`${fileName}`,(v)=>{
             this.models[name]=v.scene;
-            if(name=='geralt') {
-                console.log(v)
-            }
-            ev(v.scene);
+            changeMaterial(this.models[name],{metalness:0})
+            ev(this.models[name]);
         })
     }
 
@@ -45,7 +46,7 @@ export class ModelHandler {
         if(this.models[name]) {
             ev(this.models[name].clone())
         } else {
-            this.load(name,ev/*,inst*/)
+            this.load(name,ev)
         }
         return this;
     }
