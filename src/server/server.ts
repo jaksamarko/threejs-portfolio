@@ -3,7 +3,7 @@ import path from 'path'
 import http from 'http'
 import compression from 'compression'
 
-const port: number = 3000
+const port: number = 8080
 
 class App {
     private server: http.Server
