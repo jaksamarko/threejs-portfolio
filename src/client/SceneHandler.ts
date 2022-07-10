@@ -16,7 +16,7 @@ export interface ObjectParams {
 }
 
 export class SceneHandler extends THREE.Scene {
-    private static instance: SceneHandler;
+    static instance: SceneHandler;
     modelHandler: ModelHandler;
     camera: CameraHandler;
     stats: Stats;
@@ -27,6 +27,7 @@ export class SceneHandler extends THREE.Scene {
     pointer: THREE.Vector2;
     raycaster: THREE.Raycaster;
     highlight: THREE.Object3D | null;
+    btCancel: HTMLElement;
 
     step: ()=>void;
     draw: ()=>void;
@@ -44,13 +45,16 @@ export class SceneHandler extends THREE.Scene {
         this.renderer = /*new OutlineEffect(renderer)*/renderer
         this.renderer.setSize(window.innerWidth, window.innerHeight)
 
-        const dom = this.renderer.domElement
-        document.body.appendChild(dom)
-        document.body.appendChild(this.stats.dom)
+        this.btCancel = document.getElementById("btCancel")!
+        this.btCancel.style.visibility="hidden"
+
+        document.getElementById("webgl")?.appendChild(this.renderer.domElement)
+        document.getElementById("webgl")?.appendChild(this.stats.dom)
         this.step = this.draw = ()=>{};
 
         window.addEventListener('resize', ()=>{this.onWindowResize()}, false)
-        document.addEventListener( 'mousemove', (ev:MouseEvent)=>{this.onPointerMove(ev)})
+        document.addEventListener('mousemove', (ev:MouseEvent)=>{this.onPointerMove(ev)})
+        document.addEventListener('touchmove', (ev:TouchEvent)=>{this.onPointerMove(ev)})
         document.addEventListener('mousedown', (ev:MouseEvent)=>{this.onPointerClick(ev)})
 
 
@@ -120,15 +124,25 @@ export class SceneHandler extends THREE.Scene {
         })
     }
 
-    onPointerMove( event: MouseEvent ) {
-        this.pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        this.pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    onPointerMove( event: MouseEvent|TouchEvent ) {
+        let mx: number,my: number;
+        if(event instanceof MouseEvent) {
+            mx = event.clientX;
+            my = event.clientY;
+        } else {
+            mx = event.touches[0].clientX;
+            my = event.touches[0].clientY;
+        }
+        
+        this.pointer.x = ( mx / window.innerWidth ) * 2 - 1;
+        this.pointer.y = - ( my / window.innerHeight ) * 2 + 1;
+
         const intersects = this.raycaster.intersectObjects( [...this.teleports,...this.examine,...this.interact] , true );
         if(this.highlight) {
             changeMaterial(this.highlight ,{emissive:new THREE.Color(0,0,0)})
             this.highlight = null
         }
-        if(this.camera.holdingObj)
+        if(this.camera.holding)
             return;
         if(intersects.length) {
             this.highlight = intersects[0].object.parent || intersects[0].object;

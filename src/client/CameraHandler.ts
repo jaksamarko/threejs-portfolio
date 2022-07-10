@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import { SceneHandler } from "./SceneHandler";
+
+const CAM_SPEED = 2;
 
 export class CameraHandler extends THREE.PerspectiveCamera {
     mPosPrev: THREE.Vector2;
@@ -19,33 +22,53 @@ export class CameraHandler extends THREE.PerspectiveCamera {
         this.target = this.holdingObj = null;
 
         document.addEventListener('mousemove',(ev:MouseEvent)=>{this.pointerMove(ev)});
+        document.addEventListener('touchmove',(ev:TouchEvent)=>{this.pointerMove(ev)});
         document.addEventListener('contextmenu',(ev:MouseEvent)=>{this.onPointerRClick(ev)})
-        document.addEventListener('mousedown',(ev:MouseEvent)=>{
-            if(!this.isClick) {
-                this.mPosPrev.copy(CameraHandler.calculateMs(ev))
-                this.isClick=true
-            }
-        })
-        document.addEventListener('mouseup',()=>{this.isClick=false})
+        document.addEventListener('mousedown',(ev:MouseEvent)=>{this.pointerPress(ev)});
+        document.addEventListener('touchstart',(ev:TouchEvent)=>{this.pointerPress(ev)});
+        document.addEventListener('mouseup',()=>{this.pointerRelease()})
+        document.addEventListener('touchend',()=>{this.pointerRelease()})
     }
 
     set holding(obj: THREE.Object3D | null) {
+        const inst = SceneHandler.instance;
         this.holdingObj=obj;
+        inst.btCancel.style.visibility=(obj!=null)?"visible":"hidden"
         if(obj!=null)
             this.putDown=false;
     }
 
-    static calculateMs(ev:MouseEvent):THREE.Vector2 {
-        return new THREE.Vector2(( ev.screenX / window.innerWidth )*2-1, ( ev.screenY / window.innerHeight )*2+1);
+    get holding() {
+        return this.holdingObj
+    }
+
+    static calculateMs(ev:MouseEvent|TouchEvent):THREE.Vector2 {
+        const v = new THREE.Vector2()
+        if(ev instanceof MouseEvent)
+            v.set(ev.screenX,ev.screenY)
+        else 
+            v.set(ev.touches[0].clientX,ev.touches[0].clientY)
+        return new THREE.Vector2(( v.x / window.innerWidth )*2-1, ( v.y / window.innerHeight )*2+1);
     }
 
     private clamp(v: number, min: number, max:number) {
         return Math.min(max,Math.max(min,v));
     }
 
-    private pointerMove(ev:MouseEvent) {
+    private pointerRelease() {
+        this.isClick=false;
+    }
+
+    private pointerPress(ev:MouseEvent | TouchEvent) {
+        if(!this.isClick) {
+            this.mPosPrev.copy(CameraHandler.calculateMs(ev))
+            this.isClick=true
+        }
+    }
+
+    private pointerMove(ev:MouseEvent | TouchEvent) {
         const ms = CameraHandler.calculateMs(ev)
-        const diff = new THREE.Vector2(ms.x-this.mPosPrev.x,ms.y-this.mPosPrev.y).multiplyScalar(80 * Math.PI/180);
+        const diff = new THREE.Vector2(ms.x-this.mPosPrev.x,ms.y-this.mPosPrev.y).multiplyScalar(CAM_SPEED * Math.PI/2);
         if(this.isClick) {
             if(this.holdingObj==null) {
                 this.rot.x += diff.x;
@@ -105,7 +128,7 @@ export class CameraHandler extends THREE.PerspectiveCamera {
             const dirVec = new THREE.Vector3()
             this.getWorldDirection(dirVec)
             if(this.holdTransfer(this.holdingObj,this.position.clone().add(dirVec.multiplyScalar(0.2)))) {
-                this.holdingObj=null
+                this.holding=null
                 this.putDown=false
             }   
         }

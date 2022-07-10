@@ -9,10 +9,43 @@
                 overflow: hidden;
                 margin: 0px;
             }
+
+            .ui {
+                position: absolute;
+                top: 90%;
+                left: 50%;
+                margin-right: -50%;
+                transform: translate(-50%, -50%);
+            }
+            
+            .button {
+                display: inline-block;
+                outline: 0;
+                text-align: center;
+                cursor: pointer;
+                padding: 12px 15px;
+                border: 0;
+                color: #fff;
+                font-size: 14.5px;
+                border: 2px solid transparent;
+                border-color: #404;
+                color: #404;
+                background: rgba(220,220,220,0.5);
+                font-weight: 800;
+                line-height: 30px;
+                transition: background,color .1s ease-in-out;
+            }
+
+            /*.button:active {
+                background-color: #000;
+                color: #fff;
+            }*/
         </style>
     </head>
 
     <body>
         <script type="module" src="bundle.js"></script>
+        <div id="webgl"></div>
+        <div class="ui"><div class="button" id="btCancel">Cancel</div></div>
     </body>
 </html>

@@ -30,6 +30,9 @@ for(let obj of objs) {
 
 scene.camera.position.copy(new THREE.Vector3(/*1,.6,1*/3,3,3))
 
+function pointerClick(ev: MouseEvent | TouchEvent) {
+    
+}
 
 document.addEventListener('mousedown',(ev:MouseEvent)=>{
     scene.onPointerMove(ev);
